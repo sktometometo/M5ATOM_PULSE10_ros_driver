@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>M5ATOM_PULSE10_ros_driver</name>
+  <version>0.0.1</version>
+  <description>The M5ATOM_PULSE10_ros_driver package</description>
+
+  <author email="sktometometo@gmail.com">sktometometo</author>
+  <maintainer email="sktometometo@gmail.com">sktometometo</maintainer>
+
+  <license>TODO</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>platformio</exec_depend>
+  <exec_depend>rosserial_arduino</exec_depend>
+  <exec_depend>rosserial_python</exec_depend>
+
+  <export>
+  </export>
+</package>
