@@ -7,28 +7,21 @@
 #include <M5Atom.h>
 #include "BluetoothSerial.h"
 #include "ros/node_handle.h"
-#include <std_msgs/Int64.h>
+#include <std_msgs/Int32.h>
 
-//#define USE_BLUETOOTH
-
-#ifdef USE_BLUETOOTH
-// for bluetooth serial
-#include "BluetoothHardware.h"
-ros::NodeHandle_<ESP32BluetoothHardware, 25, 25, 4096, 4096> nh;
-#else
 // for usb serial
 #include "ArduinoHardware.h"
 ros::NodeHandle_<ArduinoHardware, 25, 25, 4096, 4096> nh;
-BluetoothSerial bluetooth_serial;
-#endif
 
 
 #define DELIMITCODE  0x0a       // Delimit Code 
 
 static unsigned long offtime;
 
-std_msgs::Int64 msg_data;
+std_msgs::Int32 msg_data;
+std_msgs::Int32 msg_pulse_rate;
 ros::Publisher publisher_data("~data", &msg_data);
+ros::Publisher publisher_pulse_rate("~pulse_rate", &msg_pulse_rate);
 
 
 void setup() {
@@ -44,14 +37,9 @@ void setup() {
     offtime = 0;
 
     // ros initialization
-#ifdef USE_BLUETOOTH
-    nh.initNode("PULSE10 ROS");
-    Serial.begin(57600);
-#else
     nh.initNode();
-    bluetooth_serial.begin("PULSE10");
-#endif
     nh.advertise(publisher_data);
+    //nh.advertise(publisher_pulse_rate);
     while(not nh.connected() ){
         nh.spinOnce();
         M5.dis.drawpix(0, 0x0000f0);      // BLUE
@@ -66,22 +54,17 @@ void setup() {
 void publishData(int value) {
     msg_data.data = value;
     publisher_data.publish(&msg_data);
-#ifdef USE_BLUETOOTH
-    Serial.println(value);
-#else
-    bluetooth_serial.println(value);
-#endif
 }
 
+void publishPulseRate(int value) {
+    msg_pulse_rate.data = value;
+    publisher_pulse_rate.publish(&msg_pulse_rate);
+}
 
 void loop() {
-    String   strInput;
-    int      val;
-    int      plsrate;
-
-    delay(100);
+    delay(10);
     nh.spinOnce();
-    while(not nh.connected() ){
+    while(not nh.connected()){
         nh.spinOnce();
         delay(100);
         M5.dis.drawpix(0, 0x0000f0);      // BLUE
@@ -92,27 +75,22 @@ void loop() {
     M5.dis.drawpix(0, 0xf00000);      // GREEN
 
     if(Serial2.available() > 0) {
-        strInput = Serial2.readStringUntil(DELIMITCODE);
+        String strInput = Serial2.readStringUntil(DELIMITCODE);
         if (strInput[0]=='#'){
-        // 脈拍数データ識別
-            strInput[0]=' ';        // @をSpaceに置き換える
-            if (strInput[1]=='-'){
-              strInput[1]=' ';      // マイナスはErrorマークなのでSpaceに置き換えて色を赤にする
-            }else{
-                val = strInput.toInt();
-                offtime = millis()+250;
-            }
+            // pulse rate data
+            //strInput[0]=' ';        // @をSpaceに置き換える
+            //if (strInput[1]=='-'){
+            //    // Error
+            //}else{
+            //    int val = strInput.toInt();
+            //    publishPulseRate(val);
+            //}
         }else{
-        // 脈波形データ処理
-            val = strInput.toInt();
-            publishData(val);
-        }
-    }
-
-    if (offtime!=0){
-        if (millis()>=offtime){
-          M5.dis.drawpix(0, 0x000000);
-          offtime = 0;
+            // pulse wave data
+            int val = strInput.toInt();
+            if ( val <= 5000 and val >= 0 ) {
+                publishData(val);
+            }
         }
     }
 
