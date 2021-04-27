@@ -4,24 +4,24 @@
 #include <Arduino.h>
 #include "BluetoothSerial.h"
 
-class ESP32BluetoothHardware {
+class BluetoothHardware {
 public:
-  ESP32BluetoothHardware()
+  BluetoothHardware()
   {
   }
 
   void init()
   {
-      bluetooth_serial.begin("ESP32ROS");
+    bluetooth_serial.begin("ESP32ROS");
   }
 
   void init(char *name)
   {
-      bluetooth_serial.begin(name);
+    bluetooth_serial.begin(name);
   }
 
   int read(){
-      bluetooth_serial.read();
+    return bluetooth_serial.read();
   }
 
   void write(const uint8_t* data, int length)
